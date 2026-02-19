@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
-import { DemoUnlockModal, DemoWatermark } from './components/DemoWatermark'
+import { useMemo, useState } from 'react'
 import { OverviewCards } from './components/OverviewCards'
 import { RankingTable } from './components/RankingTable'
 import { TitleDetailPanel } from './components/TitleDetailPanel'
@@ -13,23 +12,10 @@ import {
   rebalanceWeights,
 } from './utils/scoring'
 
-const WATERMARK_STORAGE_KEY = 'franchise-demo-watermark-disabled'
-const WATERMARK_PASSWORD = 'lukauljaj2007'
-
 function App() {
   const [weights, setWeights] = useState<ScoreWeights>(DEFAULT_WEIGHTS)
   const [regionFilter, setRegionFilter] = useState<RegionFilter>('GLOBAL')
   const [selectedTitleId, setSelectedTitleId] = useState<string | null>(null)
-  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false)
-  const [unlockPassword, setUnlockPassword] = useState('')
-  const [unlockError, setUnlockError] = useState<string | null>(null)
-  const [isWatermarkDisabled, setIsWatermarkDisabled] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false
-    }
-
-    return window.localStorage.getItem(WATERMARK_STORAGE_KEY) === 'true'
-  })
 
   const rankedTitles = useMemo(
     () => computeRankedTitles(TITLES, weights, regionFilter),
@@ -51,41 +37,6 @@ function App() {
   const handleSelectTitle = (id: string) => {
     setSelectedTitleId(id)
   }
-
-  const closeUnlockModal = () => {
-    setIsUnlockModalOpen(false)
-    setUnlockPassword('')
-    setUnlockError(null)
-  }
-
-  const submitUnlockPassword = () => {
-    if (unlockPassword !== WATERMARK_PASSWORD) {
-      setUnlockError('Incorrect password.')
-      return
-    }
-
-    setIsWatermarkDisabled(true)
-    window.localStorage.setItem(WATERMARK_STORAGE_KEY, 'true')
-    closeUnlockModal()
-  }
-
-  useEffect(() => {
-    const handleKeydown = (event: KeyboardEvent) => {
-      if (!event.shiftKey || event.key.toLowerCase() !== 'd') {
-        return
-      }
-
-      event.preventDefault()
-      setIsUnlockModalOpen(true)
-      setUnlockPassword('')
-      setUnlockError(null)
-    }
-
-    window.addEventListener('keydown', handleKeydown)
-    return () => {
-      window.removeEventListener('keydown', handleKeydown)
-    }
-  }, [])
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-[#0b0e14] text-slate-100">
@@ -156,17 +107,6 @@ function App() {
         selected={selectedTitle}
         region={regionFilter}
         onClose={() => setSelectedTitleId(null)}
-      />
-
-      <DemoWatermark active={!isWatermarkDisabled} />
-
-      <DemoUnlockModal
-        open={isUnlockModalOpen}
-        password={unlockPassword}
-        error={unlockError}
-        onPasswordChange={setUnlockPassword}
-        onSubmit={submitUnlockPassword}
-        onClose={closeUnlockModal}
       />
     </div>
   )
